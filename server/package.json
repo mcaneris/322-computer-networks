@@ -1,0 +1,15 @@
+{
+  "name": "322-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "knex": "^0.95.6",
+    "pg": "^8.6.0"
+  }
+}

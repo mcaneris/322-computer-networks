@@ -1,0 +1,14 @@
+{
+    "CreateAPIKey": 0,
+    "AppSyncApiName": "322chatapp",
+    "DynamoDBBillingMode": "PAY_PER_REQUEST",
+    "DynamoDBEnableServerSideEncryption": false,
+    "AuthCognitoUserPoolId": {
+        "Fn::GetAtt": [
+            "auth322chatapp6e27973c",
+            "Outputs.UserPoolId"
+        ]
+    },
+    "S3DeploymentBucket": "amplify-322chatapp-dev-214936-deployment",
+    "S3DeploymentRootKey": "amplify-appsync-files/9d7afbeaf674ce5b271a4c7bba3899b1a482e530"
+}
