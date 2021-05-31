@@ -41,9 +41,11 @@ const registerPresence = async (socket) => {
 };
 
 const dropPresence = async (socket) => {
-  const username = socket.handshake.auth.username;
-  await knex("presence").delete(username);
-  broadcast();
+  try {
+    const username = socket.handshake.auth.username;
+    await knex("presence").delete(username);
+    broadcast();
+  } catch (error) {}
 };
 
 const broadcast = () => {
@@ -64,7 +66,9 @@ const registerMessage = ({ id, channel_id, body, author, dataKey }) => {
       author,
       data_key: dataKey,
     })
-    .then((data) => io.emit("message", { id, channel_id, body, author, dataKey }))
+    .then((data) =>
+      io.emit("message", { id, channel_id, body, author, data_key: dataKey })
+    )
     .catch((error) => console.error(error));
 };
 
@@ -92,6 +96,14 @@ const emitChannelHistory = (socket, channelId) => {
     });
 };
 
+const addUserToChannel = async (socket, username, channel_id) => {
+  await knex("user_channels")
+    .insert({ channel_id, username })
+    .onConflict(["username", "channel_id"])
+    .ignore();
+  emitChannelList(socket);
+};
+
 io.on("connection", (socket) => {
   try {
     console.log(`Connection FROM: ${socket.id}`);
@@ -102,7 +114,12 @@ io.on("connection", (socket) => {
       registerMessage(message);
     });
 
+    socket.on("invite-user", ({ username, channel_id }) => {
+      addUserToChannel(socket, username, channel_id);
+    });
+
     socket.on("new-channel", () => {
+      const username = socket.handshake.auth.username;
       knex("channels")
         .insert({}, ["id"])
         .then((data) => {
@@ -116,7 +133,6 @@ io.on("connection", (socket) => {
     });
 
     socket.on("channel-select", (channelId) => {
-      console.log(channelId);
       emitChannelHistory(socket, channelId);
     });
 

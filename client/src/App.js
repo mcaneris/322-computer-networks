@@ -1,12 +1,11 @@
 import "./App.css";
 
-import axios from "axios";
 import { Auth } from "@aws-amplify/auth";
 import { withAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
-import { values, type, uniqBy } from "ramda";
+import { uniqBy } from "ramda";
 import React, { useCallback, useEffect, useState } from "react";
 import { ulid } from "ulid";
-import { encrypt, decrypt } from './crypto';
+import { encrypt, decrypt } from "./crypto";
 import { connect } from "./Socket";
 
 import ChannelList from "./ChannelList";
@@ -53,22 +52,23 @@ function App() {
   }, [socket]);
 
   const updateChannelMessages = useCallback(
-    (newMessages) => {
-      type(newMessages) === "Array"
-        ? setMessages(
-            uniqBy((message) => message.id, [...messages, ...newMessages])
-          )
-        : setMessages(
-            uniqBy((message) => message.id, [...messages, newMessages])
-          );
+    async (newMessages) => {
+      let decryptedMessages = [];
+      for (const message of newMessages) {
+        const decrypted = await decrypt(message, credentials);
+        decryptedMessages = [...decryptedMessages, decrypted];
+      }
+      setMessages(
+        uniqBy((message) => message.id, [...messages, ...decryptedMessages])
+      );
     },
-    [messages]
+    [credentials, messages]
   );
 
   useEffect(() => {
     if (socket) {
       socket.on("message", (message) => {
-        updateChannelMessages(message);
+        updateChannelMessages([message]);
       });
       socket.on("channel-list", (channels) => {
         setChannels(channels);
@@ -99,10 +99,17 @@ function App() {
   };
 
   const handleChannelCreate = (event) => {
-    const channel = event.target.id;
-
     try {
       socket.emit("new-channel", {});
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleUserInvite = (event) => {
+    const username = event.target.id;
+    try {
+      socket.emit("invite-user", { username, channel_id: currentChannel });
     } catch (error) {
       console.error(error);
     }
@@ -129,6 +136,8 @@ function App() {
     }
   };
 
+  const channel = channels.filter(channel => channel.id.toString() === currentChannel)[0];
+
   return (
     <div className="app">
       {userInfo && (
@@ -147,6 +156,7 @@ function App() {
           currentChannel={currentChannel}
         />
         <div className="container">
+          <h1 className="channel-title">{channel ? channel.name || channel.users.join(', ') : 'Choose a room...'}</h1>
           <div className="messages">
             <div className="messages-scroller">
               {messages
@@ -184,6 +194,7 @@ function App() {
           channels={channels}
           currentChannel={currentChannel}
           handleUserSelect={handleUserSelect}
+          handleUserInvite={handleUserInvite}
           currentUser={userInfo?.username}
           selectedUser={selectedUser}
         />

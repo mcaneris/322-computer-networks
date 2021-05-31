@@ -79,6 +79,11 @@ html, body {
   background-color: #ebffeb;
 }
 
+.channel-title {
+  font-size: 16px;
+  padding: 12px 24px;
+}
+
 .divider {
   padding: 12px 24px;
   font-weight: bold;

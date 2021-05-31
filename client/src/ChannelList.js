@@ -6,10 +6,9 @@ export default function ChannelList({
   handleChannelSelect,
   currentChannel,
 }) {
-  console.log(channels);
   return (
     <div className="channels">
-      {channels.map(({ id, name }) => {
+      {channels.sort(channel => channel.id).map(({ id, name }) => {
         return (
           <div
             key={`channel-${id}`}

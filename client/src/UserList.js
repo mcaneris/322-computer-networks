@@ -3,6 +3,7 @@ import React from "react";
 export default function UserList({
   users = [],
   handleUserSelect,
+  handleUserInvite,
   currentUser,
   channels,
   currentChannel,
@@ -36,7 +37,7 @@ export default function UserList({
             key={`user-${username}`}
             id={username}
             className={selectedUser === username ? "user selected" : "user"}
-            onClick={handleUserSelect}
+            onClick={handleUserInvite}
           >
             {username}
           </div>

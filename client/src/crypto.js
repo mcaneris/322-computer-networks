@@ -10,22 +10,20 @@ export const encrypt = async (message, credentials) => {
       KeySpec: "AES_256",
     })
     .promise();
-  console.log(dataKey);
   const cipher = crypto.createCipher(
     "aes-256-cbc",
     dataKey.Plaintext.toString("base64")
   );
   return [
     cipher.update(message, "utf8", "base64") + cipher.final("base64"),
-    dataKey.CiphertextBlob.toString('base64'),
+    dataKey.CiphertextBlob.toString("base64"),
   ];
 };
 
 export const decrypt = async (message, credentials) => {
   const kms = new KMS({ region: "eu-central-1", credentials });
-  var kmsKeyBuffer = new Buffer(message.data_key, 'base64');
-  const kmsData = await kms.decrypt({CiphertextBlob: kmsKeyBuffer});
-  console.log(kmsData);
+  var kmsKeyBuffer = new Buffer(message.data_key, "base64");
+  const kmsData = await kms.decrypt({ CiphertextBlob: kmsKeyBuffer }).promise();
   const decipher = crypto.createDecipher(
     "aes-256-cbc",
     kmsData.Plaintext.toString("base64")
