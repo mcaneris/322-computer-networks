@@ -21,6 +21,11 @@ const io = new Server(server, {
   origins: ["3.121.223.135:8080", "localhost:3000"]
 });
 
+/*
+ * Register each connection as a presence in the database.
+ * The presence table upserts on username, so we guarantee
+ * that there is always a single row in the db for a user.
+ */
 const registerPresence = async (socket) => {
   const username = socket.handshake.auth.username;
 
@@ -40,6 +45,9 @@ const registerPresence = async (socket) => {
   broadcast();
 };
 
+/*
+ * Register each connection as a presence in the database.
+ */
 const dropPresence = async (socket) => {
   try {
     const username = socket.handshake.auth.username;
@@ -48,6 +56,12 @@ const dropPresence = async (socket) => {
   } catch (error) {}
 };
 
+/*
+ * Broadcast all present users.
+ * registerPresence and dropPresence will
+ * call the broadcast function to send
+ * updated presence list to all users.
+ */
 const broadcast = () => {
   knex("presence")
     .select("username")
