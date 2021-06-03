@@ -18,7 +18,7 @@ const knex = require("knex")({
 
 const io = new Server(server, {
   cors: true,
-  origins: ["http://localhost:3000"],
+  origins: ["3.121.223.135:8080"]
 });
 
 const registerPresence = async (socket) => {
