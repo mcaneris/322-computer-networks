@@ -18,7 +18,7 @@ const knex = require("knex")({
 
 const io = new Server(server, {
   cors: true,
-  origins: ["3.121.223.135:8080"]
+  origins: ["3.121.223.135:8080", "localhost:3000"]
 });
 
 const registerPresence = async (socket) => {
@@ -74,16 +74,16 @@ const registerMessage = ({ id, channel_id, body, author, dataKey }) => {
 
 const emitChannelList = async (socket) => {
   const username = socket.handshake.auth.username;
-  const userChannels = await knex("user_channels");
+  const userChannels = await knex("user_channels").select("channels.id", "channels.name").where("username", username).join("channels", "user_channels.channel_id", "channels.id");
+  let channels = [];
 
-  const channels = (await knex("channels")).map((channel) => {
-    return {
-      ...channel,
-      users: userChannels
-        .filter((userChannel) => userChannel.channel_id === channel.id)
-        .map((userChannel) => userChannel.username),
-    };
-  });
+  for (const userChannel of userChannels) {
+    const users = await knex("user_channels").select("username").where("channel_id", userChannel.id);
+    channels = [...channels,  {
+      ...userChannel,
+      users: users.map(user => user.username),
+    }];
+  }
 
   socket.emit("channel-list", channels);
 };
