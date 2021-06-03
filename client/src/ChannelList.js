@@ -8,7 +8,7 @@ export default function ChannelList({
 }) {
   return (
     <div className="channels">
-      {channels.sort(channel => channel.id).map(({ id, name }) => {
+      {channels.sort((a,b) => a.id - b.id).map(({ id, name }) => {
         return (
           <div
             key={`channel-${id}`}
