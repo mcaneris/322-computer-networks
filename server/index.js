@@ -1,10 +1,16 @@
 require("dotenv").config();
 
+const AWS = require("aws-sdk");
 const express = require("express");
 const app = express();
 const http = require("http");
-const server = http.createServer(app);
 const { Server } = require("socket.io");
+
+const server = http.createServer(app);
+
+const Cognito = new AWS.CognitoIdentityServiceProvider({
+  region: "eu-central-1",
+});
 
 const knex = require("knex")({
   client: "pg",
@@ -18,7 +24,7 @@ const knex = require("knex")({
 
 const io = new Server(server, {
   cors: true,
-  origins: ["3.121.223.135:8080", "localhost:3000"]
+  origins: ["3.121.223.135:8080", "localhost:3000"],
 });
 
 /*
@@ -88,15 +94,23 @@ const registerMessage = ({ id, channel_id, body, author, dataKey }) => {
 
 const emitChannelList = async (socket) => {
   const username = socket.handshake.auth.username;
-  const userChannels = await knex("user_channels").select("channels.id", "channels.name").where("username", username).join("channels", "user_channels.channel_id", "channels.id");
+  const userChannels = await knex("user_channels")
+    .select("channels.id", "channels.name")
+    .where("username", username)
+    .join("channels", "user_channels.channel_id", "channels.id");
   let channels = [];
 
   for (const userChannel of userChannels) {
-    const users = await knex("user_channels").select("username").where("channel_id", userChannel.id);
-    channels = [...channels,  {
-      ...userChannel,
-      users: users.map(user => user.username),
-    }];
+    const users = await knex("user_channels")
+      .select("username")
+      .where("channel_id", userChannel.id);
+    channels = [
+      ...channels,
+      {
+        ...userChannel,
+        users: users.map((user) => user.username),
+      },
+    ];
   }
 
   socket.emit("channel-list", channels);
@@ -118,6 +132,12 @@ const addUserToChannel = async (socket, username, channel_id) => {
 
   emitChannelList(socket);
 };
+
+io.use((socket, next) => {
+  const username = socket.handshake.auth.username;
+  const token = socket.handshake.auth.token;
+  next();
+});
 
 io.on("connection", (socket) => {
   try {
