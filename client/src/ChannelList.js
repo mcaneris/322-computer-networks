@@ -8,15 +8,21 @@ export default function ChannelList({
 }) {
   return (
     <div className="channels">
-      {channels.sort((a,b) => a.id - b.id).map(({ id, name }) => {
+      <div className="divider">Rooms</div>
+      {channels.sort((a,b) => a.id - b.id).map((channel) => {
+        const pickDisplay = (channel) => {
+          if (channel.name) return channel.name;
+          if (channel.users) return channel.users.join(", ");
+          return channel.id;
+        }
         return (
           <div
-            key={`channel-${id}`}
-            id={id}
-            className={currentChannel === id.toString() ? "channel selected" : "channel"}
+            key={`channel-${channel.id}`}
+            id={channel.id}
+            className={currentChannel === channel.id.toString() ? "channel selected" : "channel"}
             onClick={handleChannelSelect}
           >
-            {name ? name : id}
+            {pickDisplay(channel)}
           </div>
         );
       })}

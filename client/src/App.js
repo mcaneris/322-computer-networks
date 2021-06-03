@@ -13,6 +13,7 @@ import UserList from "./UserList";
 import Message from "./Message";
 
 function App() {
+  const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState(null);
   const [socket, setSocket] = useState(null);
   const [currentChannel, setCurrentChannel] = useState(null);
@@ -74,6 +75,7 @@ function App() {
         setChannels(channels);
       });
       socket.on("message-history", (data) => {
+        setLoading(false);
         updateChannelMessages(data);
       });
     }
@@ -90,8 +92,9 @@ function App() {
 
   const handleChannelSelect = (event) => {
     const channel = event.target.id;
-    setCurrentChannel(channel);
     try {
+      setLoading(true);
+      setCurrentChannel(channel);
       socket.emit("channel-select", channel);
     } catch (error) {
       console.error(error);
@@ -136,7 +139,9 @@ function App() {
     }
   };
 
-  const channel = channels.filter(channel => channel.id.toString() === currentChannel)[0];
+  const channel = channels.filter(
+    (channel) => channel.id.toString() === currentChannel
+  )[0];
 
   return (
     <div className="app">
@@ -156,7 +161,12 @@ function App() {
           currentChannel={currentChannel}
         />
         <div className="container">
-          <h1 className="channel-title">{channel ? channel.name || channel.users.join(', ') : 'Choose a room...'}</h1>
+          <h1 className="channel-title">
+            <div style={{ flexGrow: 1 }}>{channel
+              ? channel.name || channel.users.join(", ")
+              : "Choose a room..."}</div>
+            {loading ? <div>Loading...</div> : null}
+          </h1>
           <div className="messages">
             <div className="messages-scroller">
               {messages

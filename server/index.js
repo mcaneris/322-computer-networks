@@ -115,6 +115,7 @@ const addUserToChannel = async (socket, username, channel_id) => {
     .insert({ channel_id, username })
     .onConflict(["username", "channel_id"])
     .ignore();
+
   emitChannelList(socket);
 };
 
@@ -157,5 +158,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(3001, () => {
-  console.log("listening on *:3001");
+  console.log("Listening on *:3001");
 });
