@@ -205,7 +205,7 @@ function App() {
                 name="messageBody"
                 placeholder="Type your message"
                 onChange={handleChange}
-                disabled={!currentChannel}
+                disabled={currentChannel === null}
                 value={messageBody}
               />
             </form>
