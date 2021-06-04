@@ -11,7 +11,7 @@ export default function UserList({
 }) {
   const roomUsers =
     channels.length && currentChannel
-      ? channels.find((channel) => channel.id.toString() === currentChannel)
+      ? channels.find((channel) => channel.id === currentChannel)
           .users
       : [];
   return (

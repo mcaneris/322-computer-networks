@@ -52,34 +52,46 @@ function App() {
     }
   }, [socket]);
 
-  const updateChannelMessages = useCallback(
-    async (newMessages) => {
-      let decryptedMessages = [];
-      for (const message of newMessages) {
-        const decrypted = await decrypt(message, credentials);
-        decryptedMessages = [...decryptedMessages, decrypted];
-      }
-      setMessages(
-        uniqBy((message) => message.id, [...messages, ...decryptedMessages])
-      );
-    },
-    [credentials, messages]
-  );
+  const updateChannelMessages = useCallback(async (newMessages) => {
+    setMessages((messages) => {
+      return uniqBy(
+        (message) => message.id,
+        [...messages, ...newMessages]
+      ).sort((a, b) => a.created_on - b.created_on);
+    });
+  }, []);
 
   useEffect(() => {
     if (socket) {
-      socket.on("message", (message) => {
-        updateChannelMessages([message]);
-      });
       socket.on("channel-list", (channels) => {
         setChannels(channels);
       });
-      socket.on("message-history", (data) => {
-        setLoading(false);
-        updateChannelMessages(data);
-      });
     }
   }, [socket, channels, updateChannelMessages]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("message-history", async (data) => {
+        setLoading(false);
+        let decryptedMessages = [];
+
+        for await (const newMessage of data) {
+          const decrypted = await decrypt(newMessage, credentials);
+          decryptedMessages = [...decryptedMessages, decrypted];
+        }
+        updateChannelMessages(decryptedMessages);
+      });
+    }
+  }, [socket, credentials, updateChannelMessages]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("message", async (message) => {
+        const decrypted = await decrypt(message, credentials);
+        updateChannelMessages([decrypted]);
+      });
+    }
+  }, [socket, credentials, updateChannelMessages]);
 
   const handleChange = (event) => {
     setMessageBody(event.target.value);
@@ -91,7 +103,7 @@ function App() {
   };
 
   const handleChannelSelect = (event) => {
-    const channel = event.target.id;
+    const channel = parseInt(event.target.id);
     try {
       setLoading(true);
       setCurrentChannel(channel);
@@ -140,7 +152,7 @@ function App() {
   };
 
   const channel = channels.filter(
-    (channel) => channel.id.toString() === currentChannel
+    (channel) => channel.id === currentChannel
   )[0];
 
   return (
@@ -162,17 +174,17 @@ function App() {
         />
         <div className="container">
           <h1 className="channel-title">
-            <div style={{ flexGrow: 1 }}>{channel
-              ? channel.name || channel.users.join(", ")
-              : "Choose a room..."}</div>
+            <div style={{ flexGrow: 1 }}>
+              {channel
+                ? channel.name || channel.users.join(", ")
+                : "Choose a room..."}
+            </div>
             {loading ? <div>Loading...</div> : null}
           </h1>
           <div className="messages">
             <div className="messages-scroller">
               {messages
-                .filter(
-                  (message) => message.channel_id.toString() === currentChannel
-                )
+                .filter((message) => message.channel_id === currentChannel)
                 .map((message) => {
                   return (
                     <Message
