@@ -19,7 +19,7 @@ export default function ChannelList({
           <div
             key={`channel-${channel.id}`}
             id={channel.id}
-            className={currentChannel === channel.id.toString() ? "channel selected" : "channel"}
+            className={currentChannel === channel.id ? "channel selected" : "channel"}
             onClick={handleChannelSelect}
           >
             {pickDisplay(channel)}
